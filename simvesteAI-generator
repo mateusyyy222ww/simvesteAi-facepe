@@ -1,0 +1,52 @@
+from diffusers import StableDiffusionPipeline
+import torch
+
+# Função para carregar o modelo
+def load_model():
+    """
+    Carrega o modelo pré-treinado do Hugging Face.
+    """
+    print("Carregando o modelo... Isso pode levar alguns minutos.")
+    try:
+        # Carregar o modelo
+        pipeline = StableDiffusionPipeline.from_pretrained(
+            "CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+        )
+
+        # Transferir para GPU, se disponível
+        if torch.cuda.is_available():
+            pipeline.to("cuda")
+            print("Modelo carregado e transferido para GPU!")
+        else:
+            print("CUDA não está disponível. O modelo será executado na CPU.")
+
+        return pipeline
+    except Exception as e:
+        print(f"Erro ao carregar o modelo: {e}")
+        raise
+
+# Carregar o modelo
+pipeline = load_model()
+
+# Função para gerar uma imagem
+def generate_image(prompt):
+    """
+    Gera uma imagem a partir de um prompt de texto.
+    """
+    try:
+        print(f"Gerando imagem para o prompt: {prompt}")
+        image = pipeline(prompt).images[0]  # Gera a imagem
+        return image
+    except Exception as e:
+        print(f"Erro ao gerar a imagem: {e}")
+        return None
+
+# Teste: Gera uma imagem e salva localmente
+if __name__ == "__main__":
+    prompt = "Um castelo em uma montanha sob o luar"
+    image = generate_image(prompt)
+    if image:
+        image.save("imagem_gerada.png")
+        print("Imagem gerada e salva como 'imagem_gerada.png'")
+    else:
+        print("Erro ao gerar a imagem.")
